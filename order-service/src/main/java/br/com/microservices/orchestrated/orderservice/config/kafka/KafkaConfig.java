@@ -75,7 +75,7 @@ public class KafkaConfig {
     private Map<String, Object> producerProps() {
         var props = new HashMap<String, Object>();
 
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, groupId);
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return props;

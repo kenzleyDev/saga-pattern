@@ -46,11 +46,10 @@
 
 [Voltar ao início](#sum%C3%A1rio)
 
-No curso, desenvolveremos a seguinte aquitetura:
 
 <img alt="Arquitetura" src="assets/arquitetura.png"/>
 
-Em nossa arquitetura, teremos 5 serviços:
+Em nossa arquitetura, temos 5 serviços:
 
 * **Order-Service**: microsserviço responsável apenas por gerar um pedido inicial, e receber uma notificação. Aqui que teremos endpoints REST para inciar o processo e recuperar os dados dos eventos. O banco de dados utilizado será o MongoDB.
 * **Orchestrator-Service**: microsserviço responsável por orquestrar todo o fluxo de execução da Saga, ele que saberá qual microsserviço foi executado e em qual estado, e para qual será o próximo microsserviço a ser enviado, este microsserviço também irá salvar o processo dos eventos. Este serviço não possui banco de dados.
