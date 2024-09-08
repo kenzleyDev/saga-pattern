@@ -71,7 +71,6 @@ public class PaymentService {
                 event.getOrderId(), event.getTransactionId())) {
             throw new ValidationException("There's another transactionId for this validation.");
         }
-
     }
 
     private void createPendingPayment(Event event) {
