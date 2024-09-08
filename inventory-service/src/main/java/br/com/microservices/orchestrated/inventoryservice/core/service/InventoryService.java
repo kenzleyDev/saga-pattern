@@ -23,7 +23,7 @@ import static br.com.microservices.orchestrated.inventoryservice.core.enums.ESag
 @Service
 @AllArgsConstructor
 public class InventoryService {
-    private static final String CURRENT_SOURCE = "INVENTORY-SERVICE";
+    private static final String CURRENT_SOURCE = "INVENTORY_SERVICE";
 
     private final JsonUtil jsonUtil;
     private final KafkaProducer producer;

@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class OrderService {
     private static final String TRANSACTION_ID_PATTERN = "%s_%s";
+    private static final String CURRENT_SOURCE = "ORDER-SERVICE";
 
     private final OrderRepository repository;
     private final JsonUtil jsonUtil;

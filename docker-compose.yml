@@ -15,7 +15,7 @@ services:
       - 27018:27017
 
   product-db:
-    image: postgres:lates
+    image: postgres:latest
     container_name: product-db
     networks:
       - orchestrator-saga
