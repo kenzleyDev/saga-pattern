@@ -20,4 +20,5 @@ public class Order {
     private String transactionId;
     private Double totalAmount;
     private int totalItems;
+    private Customer customer;
 }

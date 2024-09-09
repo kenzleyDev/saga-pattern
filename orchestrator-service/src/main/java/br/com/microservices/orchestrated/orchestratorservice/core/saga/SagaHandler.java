@@ -4,13 +4,13 @@ import static br.com.microservices.orchestrated.orchestratorservice.core.enums.E
 import static br.com.microservices.orchestrated.orchestratorservice.core.enums.ESagaStatus.*;
 import static br.com.microservices.orchestrated.orchestratorservice.core.enums.ETopics.*;
 
-public final class SagaHandler {
+public class SagaHandler {
 
     private SagaHandler() {
 
     }
 
-    public static final Object[][] SAGA_HANDLER = {
+    protected static final Object[][] SAGA_HANDLER = {
             { ORCHESTRATOR, SUCCESS, PRODUCT_VALIDATION_SUCCESS },
             { ORCHESTRATOR, FAIL, FINISH_FAIL },
 
@@ -24,7 +24,9 @@ public final class SagaHandler {
 
             { INVENTORY_SERVICE, ROLLBACK_PENDING, INVENTORY_FAIL },
             { INVENTORY_SERVICE, FAIL, PAYMENT_FAIL },
-            { INVENTORY_SERVICE, SUCCESS, FINISH_SUCCESS },
+            { INVENTORY_SERVICE, SUCCESS, KITCHEN_SUCCESS },
+            { KITCHEN_SERVICE, FAIL, INVENTORY_FAIL },
+            { KITCHEN_SERVICE, SUCCESS, FINISH_SUCCESS },
     };
 
     public static final int EVENT_SOURCE_INDEX = 0;

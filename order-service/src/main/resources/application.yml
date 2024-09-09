@@ -14,7 +14,7 @@ spring:
   data:
     mongodb:
       database: admin
-      uri: ${MONGO_DB_URI:localhost:27017}
+      uri: ${MONGO_DB_URI:mongodb://localhost:27017}/admin
 
 logging:
   level:

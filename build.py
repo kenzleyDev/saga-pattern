@@ -30,6 +30,8 @@ def build_all_applications():
                      args={"payment-service"}).start()
     threading.Thread(target=build_application,
                      args={"inventory-service"}).start()
+    threading.Thread(target=build_application,
+                     args={"kitchen-service"}).start()                 
 
 
 def remove_remaining_containers():

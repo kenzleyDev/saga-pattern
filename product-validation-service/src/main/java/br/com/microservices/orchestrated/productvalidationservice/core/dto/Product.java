@@ -11,4 +11,6 @@ public class Product {
 
     private String code;
     private Double unitValue;
+    private String description;
+    private Category category;
 }

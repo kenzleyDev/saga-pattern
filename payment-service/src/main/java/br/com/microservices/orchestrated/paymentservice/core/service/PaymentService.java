@@ -92,8 +92,7 @@ public class PaymentService {
                         PreferenceItemRequest.builder()
                                 .id(product.getProduct().getCode())
                                 .title(product.getProduct().toString())
-//                                .description(product.getProductDescription())
-//                                .categoryId(product.getCategoryProduct())
+                                .description(product.getProduct().getDescription())
                                 .quantity(product.getQuantity())
                                 .currencyId("BRL")
                                 .unitPrice(BigDecimal.valueOf(product.getProduct().getUnitValue()))
@@ -170,8 +169,8 @@ public class PaymentService {
     }
 
     private void checkCurrentValidation(Event event) {
-        if(paymentRepository.existsByOrderIdAndTransactionId(
-                event.getOrderId(), event.getTransactionId())) {
+        if(Boolean.TRUE.equals(paymentRepository.existsByOrderIdAndTransactionId(
+                event.getOrderId(), event.getTransactionId()))) {
             throw new ValidationException("There's another transactionId for this validation.");
         }
     }

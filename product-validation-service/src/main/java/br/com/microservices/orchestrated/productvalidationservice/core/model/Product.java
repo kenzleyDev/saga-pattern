@@ -18,4 +18,11 @@ public class Product {
 
     @Column(nullable = false)
     private String code;
+
+    @Column(nullable = false)
+    private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 }

@@ -12,5 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderRequest {
 
+    private String cpfCustomer;
     private List<OrderProducts> products;
 }

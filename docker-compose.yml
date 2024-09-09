@@ -50,6 +50,18 @@ services:
     ports:
       - 5435:5432
 
+  kitchen-db:
+    image: postgres:latest
+    container_name: kitchen-db
+    networks:
+      - orchestrator-saga
+    environment:
+      - POSTGRES_DB=kitchen-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5436:5432
+
   kafka:
     container_name: kafka
     image: obsidiandynamics/kafka
@@ -149,6 +161,8 @@ services:
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - PUBLIC_KEY=TEST-af10d367-fa19-46a0-95b8-e58509f16b4b
+      - ACCESS_TOKEN=TEST-531540340991331-090820-b10c7d74b76f150198a2d974986c192c-1258706077
     ports:
       - 8091:8091
 
@@ -170,6 +184,24 @@ services:
       - DB_PASSWORD=postgres
     ports:
       - 8092:8092
+
+  kitchen-service:
+    build: './kitchen-service'
+    container_name: kitchen-service
+    depends_on:
+      - kitchen-db
+      - kafka
+    networks:
+      - orchestrator-saga
+    environment:
+      - KAFKA_BROKER=kafka:29092
+      - DB_HOST=kitchen-db
+      - DB_NAME=kitchen-db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    ports:
+      - 8093:8093
 
 networks:
   orchestrator-saga:

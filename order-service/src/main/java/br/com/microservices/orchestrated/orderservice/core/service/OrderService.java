@@ -1,5 +1,6 @@
 package br.com.microservices.orchestrated.orderservice.core.service;
 
+import br.com.microservices.orchestrated.orderservice.core.document.Customer;
 import br.com.microservices.orchestrated.orderservice.core.document.Event;
 import br.com.microservices.orchestrated.orderservice.core.document.Order;
 import br.com.microservices.orchestrated.orderservice.core.dto.OrderRequest;
@@ -13,6 +14,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static io.micrometer.common.util.StringUtils.isEmpty;
+
 @Service
 @AllArgsConstructor
 public class OrderService {
@@ -23,19 +26,29 @@ public class OrderService {
     private final JsonUtil jsonUtil;
     private final SagaProducer producer;
     private final EventService eventService;
+    private final CustomerService customerService;
 
     public Order createOrder(OrderRequest orderRequest) {
+
         var order = Order.builder()
                 .products(orderRequest.getProducts())
                 .createdAt(LocalDateTime.now())
                 .transactionId(
                         String.format(TRANSACTION_ID_PATTERN, Instant.now().toEpochMilli(), UUID.randomUUID())
                 )
+                .customer(validateCustomer(orderRequest))
                 .build();
         repository.save(order);
         producer.sendEvent(jsonUtil.toJson(createPayload(order)));
 
         return order;
+    }
+
+    private Customer validateCustomer(OrderRequest orderRequest) {
+        if(isEmpty(orderRequest.getCpfCustomer())) {
+            return null;
+        }
+        return customerService.findByCpf(orderRequest.getCpfCustomer());
     }
 
     private Event createPayload(Order order) {
