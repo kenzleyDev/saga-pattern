@@ -45,6 +45,8 @@ public class Payment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    private String initPoint;
+
     @PrePersist
     public void prePersist() {
         var now = LocalDateTime.now();

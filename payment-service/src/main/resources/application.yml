@@ -29,3 +29,11 @@ logging:
     org:
       apache:
         kafka: OFF
+
+mercado:
+  pago:
+    public-key: ${PUBLIC_KEY}
+    access-token: ${ACCESS_TOKEN}
+
+api:
+  url: ${API_URL:localhost}:${API_PORT:8091}
