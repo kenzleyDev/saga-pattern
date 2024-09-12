@@ -91,7 +91,7 @@ public class PaymentService {
                 PreferenceItemRequest itemRequest =
                         PreferenceItemRequest.builder()
                                 .id(product.getProduct().getCode())
-                                .title(product.getProduct().toString())
+                                .title(product.getProduct().getCode())
                                 .description(product.getProduct().getDescription())
                                 .quantity(product.getQuantity())
                                 .currencyId("BRL")
@@ -258,7 +258,10 @@ public class PaymentService {
     }
 
     private String getUrlRedirectCheckout(EPaymentStatus status, Event event) {
-       return systemProperties.getUrl().concat("/").concat(event.getPayload().getId()).concat("/").concat(status.name());
+       return systemProperties.getUrl()
+                .concat("/api/checkout/")
+               .concat(event.getPayload().getId())
+               .concat("/").concat(status.name());
     }
 
 }

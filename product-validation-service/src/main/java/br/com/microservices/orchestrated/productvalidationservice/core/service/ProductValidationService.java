@@ -4,6 +4,7 @@ import br.com.microservices.orchestrated.productvalidationservice.config.excepti
 import br.com.microservices.orchestrated.productvalidationservice.core.dto.Event;
 import br.com.microservices.orchestrated.productvalidationservice.core.dto.History;
 import br.com.microservices.orchestrated.productvalidationservice.core.dto.OrderProducts;
+import br.com.microservices.orchestrated.productvalidationservice.core.model.Product;
 import br.com.microservices.orchestrated.productvalidationservice.core.model.Validation;
 import br.com.microservices.orchestrated.productvalidationservice.core.producer.KafkaProducer;
 import br.com.microservices.orchestrated.productvalidationservice.core.repository.ProductRepository;
@@ -14,9 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static br.com.microservices.orchestrated.productvalidationservice.core.enums.ESagaStatus.*;
-import static org.springframework.util.StringUtils.isEmpty;
+import static org.springframework.util.ObjectUtils.isEmpty;
 
 
 @Slf4j
@@ -54,6 +56,10 @@ public class ProductValidationService {
         kafkaProducer.sendEvent(jsonUtil.toJson(event));
     }
 
+    public List<Product> findAll() {
+        return productRepository.findAll();
+    }
+
     private void validateProductsInformed(Event event) {
         if(isEmpty(event.getPayload()) || isEmpty(event.getPayload().getProducts())) {
             throw new ValidationException("Product list is empty!");
@@ -65,8 +71,8 @@ public class ProductValidationService {
 
     private void checkCurrentValidation(Event event) {
         validateProductsInformed(event);
-        if(validationRepository.existsByOrderIdAndTransactionId(
-                event.getOrderId(), event.getTransactionId())) {
+        if(Boolean.TRUE.equals(validationRepository.existsByOrderIdAndTransactionId(
+                event.getOrderId(), event.getTransactionId()))) {
             throw new ValidationException("There's another transactionId for this validation.");
         }
 
@@ -84,7 +90,7 @@ public class ProductValidationService {
     }
 
     private void validateExistingProduct(String code) {
-        if(!productRepository.existsByCode(code)) {
+        if(Boolean.FALSE.equals(productRepository.existsByCode(code))) {
             throw new ValidationException("Product does not exists in database!");
         }
     }
@@ -131,4 +137,5 @@ public class ProductValidationService {
                 },
                 () -> createValidation(event, false));
     }
+
 }

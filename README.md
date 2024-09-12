@@ -1,24 +1,58 @@
-# Projeto: Arquitetura de Microsserviços: Padrão Saga Orquestrado
+# Projeto: Arquitetura de Microsserviços: Padrão Saga Orquestrado - FIAP FASE 05
 
-<img alt="Arquitetura" src="assets/tecnologias.png"/>
+# Projeto: Arquitetura de Microsserviços: Padrão Saga Orquestrado - FIAP FASE 05
 
-### Sumário:
+### Sumário
 
+* [Justificativa](#justificativa)
+* [Relatório de Vulnerabilidades OWASP Zap](#relatório-de-vulnerabilidades-owasp-zap)
+* [Relatório RIPD](#relatório-ripd)
 * [Tecnologias](#tecnologias)
 * [Ferramentas utilizadas](#ferramentas-utilizadas)
 * [Arquitetura Proposta](#arquitetura-proposta)
-* [Execução do projeto](#execu%C3%A7%C3%A3o-do-projeto)
-    * [01 - Execução geral via docker-compose](#01---execu%C3%A7%C3%A3o-geral-via-docker-compose)
-    * [02 - Execução geral via automação com script em Python](#02---execu%C3%A7%C3%A3o-geral-via-automa%C3%A7%C3%A3o-com-script-em-python)
-    * [03 - Executando os serviços de bancos de dados e Message Broker](#03---executando-os-servi%C3%A7os-de-bancos-de-dados-e-message-broker)
-    * [04 - Executando manualmente via CLI](#04---executando-manualmente-via-cli)
-* [Acessando a aplicação](#acessando-a-aplica%C3%A7%C3%A3o)
-* [Acessando tópicos com Redpanda Console](#acessando-t%C3%B3picos-com-redpanda-console)
+* [Execução do projeto](#execução-do-projeto)
+  * [01 - Execução geral via Kubernetes](#01---execução-geral-via-kubernetes)
+* [Acessando a aplicação](#acessando-a-aplicação)
+* [Acessando tópicos com Redpanda Console](#acessando-tópicos-com-redpanda-console)
 * [Dados da API](#dados-da-api)
-    * [Produtos registrados e seu estoque](#produtos-registrados-e-seu-estoque)
-    * [Endpoint para iniciar a saga](#endpoint-para-iniciar-a-saga)
-    * [Endpoint para visualizar a saga](#endpoint-para-visualizar-a-saga)
-    * [Acesso ao MongoDB](#acesso-ao-mongodb)
+  * [Produtos registrados e seu estoque](#produtos-registrados-e-seu-estoque)
+  * [Endpoint para iniciar a saga](#endpoint-para-iniciar-a-saga)
+  * [Endpoint para visualizar a saga](#endpoint-para-visualizar-a-saga)
+* [Autor](#autor)
+
+
+## Justificativa
+
+
+Ao assistir o módulo sobre o padrão Saga, optei pela Saga orquestrada, pois senti mais confiança em contar com um orquestrador para coordenar o fluxo. Considerando a arquitetura dos microsserviços que implementei, a decisão foi influenciada pelos seguintes pontos:
+
+* **Maior Controle Centralizado: O Orchestrator-Service é responsável por coordenar as interações entre os microsserviços, o que facilita o controle do processo como um todo. Além disso, as lógicas de compensação ficam centralizadas, simplificando a gestão de fluxos complexos.**<br><br>
+
+* **Facilidade na Implementação de Lógicas de Compensação: Como há um serviço centralizado gerenciando toda a execução da Saga, implementar ações de compensação para desfazer transações em caso de falhas torna-se mais simples e eficiente.**<br><br>
+
+* **Desacoplamento entre Microsserviços: Cada microsserviço permanece focado em suas próprias responsabilidades e não precisa estar ciente de todo o fluxo da transação. Isso garante um baixo acoplamento e facilita a manutenção e evolução dos serviços.**<br><br>
+
+* **Facilidade de Monitoramento e Debugging: Com o orquestrador gerenciando as etapas do processo, fica mais fácil monitorar e identificar possíveis falhas no fluxo, proporcionando uma visão centralizada da execução das transações e melhorando o diagnóstico de problemas.**<br>
+
+## Relatório de Vulnerabilidades OWASP Zap
+
+<b><h3>Obs:</h3><b/>
+<p style="color: red;"> Ao rodar o OWASP ZAP, não detectou falhas, acredito que com minha experiência profissional e utilizando bibliotecas do spring e implementando com os padrões do spring, não foi possível a ferramenta encontrar falhas.
+Utilizei o módulo do OWASP e o seguinte vídeo como exemplo para ver se não estava fazendo algo de errado</p>
+
+
+[Assista ao vídeo API Security Testing With Postman & OWASP Zap - A quick walkthrough](https://www.youtube.com/watch?v=YDijuX-MyWY&t=354s&pp=ugMICgJwdBABGAHKBQ5vd2FzcCB6YXAgcG9zdA%3D%3D)
+
+<b>Clique para exibir os relatórios:</b>
+
+* **[Listar/exibir cardápio](assets/owaspzap/cardapyfirstatack.png)**
+* **[Listar/exibir cardápio](assets/owaspzap/checkout.png)**
+* **[Confirmação do Pagamento (Webhook)](assets/owaspzap/webhookpayment.png)**
+
+Não foi possível realizar o da geração de pagamento, pois a saga é a responsável por gerar automaticamente, não sendo um processo "manual".
+
+## Relatório RIPD
+* **[Relatório de impacto dos dados pessoais (RIPD)](assets/relatorioRipd.pdf)**
 
 ## Tecnologias
 
@@ -41,6 +75,7 @@
 * **IntelliJ IDEA Community Edition**
 * **Docker**
 * **Gradle**
+* **Kubernetes**
 
 # Arquitetura Proposta
 
@@ -51,74 +86,30 @@
 
 Em nossa arquitetura, temos 5 serviços:
 
-* **Order-Service**: microsserviço responsável apenas por gerar um pedido inicial, e receber uma notificação. Aqui que teremos endpoints REST para inciar o processo e recuperar os dados dos eventos. O banco de dados utilizado será o MongoDB.
-* **Orchestrator-Service**: microsserviço responsável por orquestrar todo o fluxo de execução da Saga, ele que saberá qual microsserviço foi executado e em qual estado, e para qual será o próximo microsserviço a ser enviado, este microsserviço também irá salvar o processo dos eventos. Este serviço não possui banco de dados.
-* **Product-Validation-Service**: microsserviço responsável por validar se o produto informado no pedido existe e está válido. Este microsserviço guardará a validação de um produto para o ID de um pedido. O banco de dados utilizado será o PostgreSQL.
-* **Payment-Service**: microsserviço responsável por realizar um pagamento com base nos valores unitários e quantidades informadas no pedido. Este microsserviço guardará a informação de pagamento de um pedido. O banco de dados utilizado será o PostgreSQL.
-* **Inventory-Service**: microsserviço responsável por realizar a baixa do estoque dos produtos de um pedido. Este microsserviço guardará a informação da baixa de um produto para o ID de um pedido. O banco de dados utilizado será o PostgreSQL.
+* **Order-Service**: microsserviço responsável apenas por gerar um pedido inicial, e receber uma notificação. 
+* **Orchestrator-Service**: microsserviço responsável por orquestrar todo o fluxo de execução da Saga.
+* **Product-Validation-Service**: microsserviço responsável por validar se o produto informado no pedido existe e está válido.
+* **Payment-Service**: microsserviço responsável por realizar um pagamento com base nos valores unitários e quantidades informadas no pedido. 
+* **Inventory-Service**: microsserviço responsável por realizar a baixa do estoque dos produtos de um pedido. 
+* **Kitchen-Service**: microsserviço responsável por receber o pedido e atualizar o seu status.
 
-Todos os serviços da arquitetura irão subir através do arquivo **docker-compose.yml**.
+Todos os serviços da arquitetura irão subir através do kubernetes.
 
 ## Execução do projeto
 
 [Voltar ao início](#sum%C3%A1rio)
 
-Há várias maneiras de executar os projetos:
-
-1. Executando tudo via `docker-compose`
-2. Executando apenas os serviços de bancos de dados e message broker (Kafka) separadamente
-3. Executando as aplicações manualmente via CLI (`java -jar` ou `gradle bootRun` ou via IntelliJ)
-
-Para rodar as aplicações, será necessário ter instalado:
-
-* **Docker**
-* **Java 17**
-* **Gradle 7.6 ou superior**
-
-### 01 - Execução geral via docker-compose
+### 01 - Execução geral via Kubernetes
 
 [Voltar ao nível anterior](#execu%C3%A7%C3%A3o-do-projeto)
 
 Basta executar o comando no diretório raiz do repositório:
 
-`docker-compose up --build -d`
-
-**Obs.: para rodar tudo desta maneira, é necessário realizar o build das 5 aplicações, veja nos passos abaixo sobre como fazer isto.**
-
-### 03 - Executando os serviços de bancos de dados e Message Broker
-
-[Voltar ao nível anterior](#execu%C3%A7%C3%A3o-do-projeto)
-
-Para que seja possível executar os serviços de bancos de dados e Message Broker, como MongoDB, PostgreSQL e Apache Kafka, basta ir no diretório raiz do repositório, onde encontra-se o arquivo `docker-compose.yml` e executar o comando:
-
-`docker-compose up --build -d order-db kafka product-db payment-db inventory-db`
-
-Como queremos rodar apenas os serviços de bancos de dados e Message Broker, é necessário informá-los no comando do `docker-compose`, caso contrário, as aplicações irão subir também.
-
-Para parar todos os containers, basta rodar:
-
-`docker-compose down`
-
-Ou então:
-
-`docker stop ($docker ps -aq)`
-`docker container prune -f`
-
-### 04 - Executando manualmente via CLI
-
-[Voltar ao nível anterior](#execu%C3%A7%C3%A3o-do-projeto)
-
-Antes da execução do projeto, realize o `build` da aplicação indo no diretório raiz e executando o comando:
-
-`gradle build -x test`
-
-Para executar os projetos com Gradle, basta entrar no diretório raiz de cada projeto, e executar o comando:
-
-`gradle bootRun`
-
-Ou então, entrar no diretório: `build/libs` e executar o comando:
-
-`java -jar nome_do_jar.jar`
+`kubectl apply -f .\kubernetes\namespaces\`,
+`kubectl apply -f .\kubernetes\pvc\ `,
+`kubectl apply -f .\kubernetes\configs-maps\`,
+`kubectl apply -f .\kubernetes\services\`,
+`kubectl apply -f .\kubernetes\deployments\`,
 
 ## Acessando a aplicação
 
@@ -126,7 +117,7 @@ Ou então, entrar no diretório: `build/libs` e executar o comando:
 
 Para acessar as aplicações e realizar um pedido, basta acessar a URL:
 
-http://localhost:3000/swagger-ui.html
+http://localhost:30000/swagger-ui.html
 
 Você chegará nesta página:
 
@@ -135,16 +126,18 @@ Você chegará nesta página:
 
 As aplicações executarão nas seguintes portas:
 
-* Order-Service: 3000
+* Order-Service: 30000
 * Orchestrator-Service: 8080
 * Product-Validation-Service: 8090
 * Payment-Service: 8091
 * Inventory-Service: 8092
+* Kichen-Service: 8093
 * Apache Kafka: 9092
-* Redpanda Console: 8081
+* Redpanda Console: 8080
 * PostgreSQL (Product-DB): 5432
 * PostgreSQL (Payment-DB): 5433
 * PostgreSQL (Inventory-DB): 5434
+* PostgreSQL (Kitchen-DB): 5435
 * MongoDB (Order-DB): 27017
 
 ## Acessando tópicos com Redpanda Console
@@ -153,7 +146,7 @@ As aplicações executarão nas seguintes portas:
 
 Para acessar o Redpanda Console e visualizar tópicos e publicar eventos, basta acessar:
 
-http://localhost:8081
+http://localhost:8080
 
 Você chegará nesta página:
 
@@ -171,10 +164,22 @@ Você chegará nesta página:
 
 Existem 3 produtos iniciais cadastrados no serviço `product-validation-service` e suas quantidades disponíveis em `inventory-service`:
 
-* **COMIC_BOOKS** (4 em estoque)
-* **BOOKS** (2 em estoque)
-* **MOVIES** (5 em estoque)
-* **MUSIC** (9 em estoque)
+* **X-BACON** (50 em estoque)
+* **X-SALAD** (50 em estoque)
+* **CHEESEBURGER** (50 em estoque)
+* **X-EGG** (50 em estoque)
+* **X-CHICKEN** (50 em estoque)
+* **X-EVERYTHING** (50 em estoque)
+* **X-EVERYTHING CHICKEN** (50 em estoque)
+* **COKE 600m** (50 em estoque)
+* **COKE** (50 em estoque)
+* **FANTA ORANGE** (50 em estoque)
+* **GUARANA** (50 em estoque)
+* **GUARANA 600ml** (50 em estoque)
+* **ICE-CREAM** (50 em estoque)
+* **PASSION FRUIT MOUSSE** (50 em estoque)
+* **CHEESEBURGER** (50 em estoque)
+* **STRAWBERRY PIE** (50 em estoque)
 
 ### Endpoint para iniciar a saga:
 
@@ -186,18 +191,12 @@ Payload:
 
 ```json
 {
+  "cpfCustomer": "string",
   "products": [
     {
       "product": {
-        "code": "COMIC_BOOKS",
-        "unitValue": 15.50
-      },
-      "quantity": 3
-    },
-    {
-      "product": {
-        "code": "BOOKS",
-        "unitValue": 9.90
+        "code": "X-BACON",
+        "unitValue": 15.00
       },
       "quantity": 1
     }
@@ -209,25 +208,32 @@ Resposta:
 
 ```json
 {
-  "id": "64429e987a8b646915b3735f",
+  "id": "66e21bfc063508040d8c9912",
   "products": [
     {
       "product": {
-        "code": "COMIC_BOOKS",
-        "unitValue": 15.5
-      },
-      "quantity": 3
-    },
-    {
-      "product": {
-        "code": "BOOKS",
-        "unitValue": 9.9
+        "code": "X-BACON",
+        "unitValue": 15
       },
       "quantity": 1
     }
   ],
-  "createdAt": "2023-04-21T14:32:56.335943085",
-  "transactionId": "1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519"
+  "createdAt": "2024-09-11T22:38:52.345120083",
+  "transactionId": "1726094332345_1d14b570-656a-42fa-96d0-3bdd934098b4",
+  "totalAmount": null,
+  "totalItems": 0,
+  "customer": {
+    "id": "252f00e8-f3d7-47a6-85d0-e2cf0ffbf4bc",
+    "name": "Josefa Carla Dias",
+    "cpf": "98418786400",
+    "address": {
+      "street": "teste",
+      "city": "teste",
+      "state": "teste"
+    },
+    "phone": "61999999999",
+    "isActive": true
+  }
 }
 ```
 
@@ -245,99 +251,81 @@ Resposta:
 
 ```json
 {
-  "id": "64429e9a7a8b646915b37360",
-  "transactionId": "1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519",
-  "orderId": "64429e987a8b646915b3735f",
-  "payload": {
-    "id": "64429e987a8b646915b3735f",
-    "products": [
-      {
-        "product": {
-          "code": "COMIC_BOOKS",
-          "unitValue": 15.5
+    "id": "66e21bfc063508040d8c9913",
+    "transactionId": "1726094332345_1d14b570-656a-42fa-96d0-3bdd934098b4",
+    "orderId": "66e21bfc063508040d8c9912",
+    "payload": {
+      "id": "66e21bfc063508040d8c9912",
+      "products": [
+        {
+          "product": {
+            "code": "X-BACON",
+            "unitValue": 15
+          },
+          "quantity": 1
+        }
+      ],
+      "createdAt": "2024-09-11T22:38:52.345",
+      "transactionId": "1726094332345_1d14b570-656a-42fa-96d0-3bdd934098b4",
+      "totalAmount": 15,
+      "totalItems": 1,
+      "customer": {
+        "id": "252f00e8-f3d7-47a6-85d0-e2cf0ffbf4bc",
+        "name": "Josefa Carla Dias",
+        "cpf": "98418786400",
+        "address": {
+          "street": "teste",
+          "city": "teste",
+          "state": "teste"
         },
-        "quantity": 3
+        "phone": "61999999999", 
+        "isActive": true
+      },
+    },
+    "source": "ORCHESTRATOR",
+    "status": "SUCCESS",
+    "eventHistory": [
+      {
+        "source": "ORCHESTRATOR",
+        "status": "SUCCESS",
+        "message": "Saga started!",
+        "createdAt": "2024-09-11T22:38:52.978"
       },
       {
-        "product": {
-          "code": "BOOKS",
-          "unitValue": 9.9
-        },
-        "quantity": 1
+        "source": "PRODUCT_VALIDATION_SERVICE",
+        "status": "SUCCESS",
+        "message": "Products are validated successfully",
+        "createdAt": "2024-09-11T22:38:54.082"
+      },
+      {
+        "source": "PAYMENT_SERVICE",
+        "status": "SUCCESS",
+        "message": "Payment realized successfully!",
+        "createdAt": "2024-09-11T22:42:29.893"
+      },
+      {
+        "source": "INVENTORY_SERVICE",
+        "status": "SUCCESS",
+        "message": "Inventory updated successfully!",
+        "createdAt": "2024-09-11T22:42:31.13"
+      },
+      {
+        "source": "KITCHEN_SERVICE",
+        "status": "SUCCESS",
+        "message": "Order finished successfully!",
+        "createdAt": "2024-09-11T22:42:32.351"
+      },
+      {
+        "source": "ORCHESTRATOR",
+        "status": "SUCCESS",
+        "message": "Saga finished!",
+        "createdAt": "2024-09-11T22:42:32.682"
       }
     ],
-    "totalAmount": 56.40,
-    "totalItems": 4,
-    "createdAt": "2023-04-21T14:32:56.335943085",
-    "transactionId": "1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519"
-  },
-  "source": "ORCHESTRATOR",
-  "status": "SUCCESS",
-  "eventHistory": [
-    {
-      "source": "ORCHESTRATOR",
-      "status": "SUCCESS",
-      "message": "Saga started!",
-      "createdAt": "2023-04-21T14:32:56.78770516"
-    },
-    {
-      "source": "PRODUCT_VALIDATION_SERVICE",
-      "status": "SUCCESS",
-      "message": "Products are validated successfully!",
-      "createdAt": "2023-04-21T14:32:57.169378616"
-    },
-    {
-      "source": "PAYMENT_SERVICE",
-      "status": "SUCCESS",
-      "message": "Payment realized successfully!",
-      "createdAt": "2023-04-21T14:32:57.617624655"
-    },
-    {
-      "source": "INVENTORY_SERVICE",
-      "status": "SUCCESS",
-      "message": "Inventory updated successfully!",
-      "createdAt": "2023-04-21T14:32:58.139176809"
-    },
-    {
-      "source": "ORCHESTRATOR",
-      "status": "SUCCESS",
-      "message": "Saga finished successfully!",
-      "createdAt": "2023-04-21T14:32:58.248630293"
-    }
-  ],
-  "createdAt": "2023-04-21T14:32:58.28"
-}
+    "createdAt": "2024-09-11T22:42:32.717"
+  }
 ```
 
-### Acesso ao MongoDB
-
-[Voltar ao início](#sum%C3%A1rio)
-
-Para conectar-se ao MongoDB via linha de comando (cli) diretamente do docker-compose, basta executar o comando abaixo:
-
-**docker exec -it order-db mongosh "mongodb://admin:123456@localhost:27017"**
-
-Para listar os bancos de dados existentes:
-
-**show dbs**
-
-Para selecionar um banco de dados:
-
-**use admin**
-
-Para visualizar as collections do banco:
-
-**show collections**
-
-Para realizar queries e validar se os dados existem:
-
-**db.order.find()**
-
-**db.event.find()**
-
-**db.order.find(id=ObjectId("65006786d715e21bd38d1634"))**
-
-**db.order.find({ "products.product.code": "COMIC_BOOKS"})**
 
 ## Autor
 
