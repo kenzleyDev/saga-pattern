@@ -111,6 +111,10 @@ Basta executar o comando no diretório raiz do repositório:
 `kubectl apply -f .\kubernetes\services\`,
 `kubectl apply -f .\kubernetes\deployments\`,
 
+<p style="color: red">OBS: É NECESSÁRIO CRIAR UMA CONTA DE DESENVOLVEDOR NO MERCADO PAGO E GERAR OS TOKENS E ADICIONAR NO CONFIG-MAP ABAIXO PARA CONSEGUIR UTILIZAR O CHECKOUT </p>
+
+`payment-service-config-map.yaml`
+
 ## Acessando a aplicação
 
 [Voltar ao início](#sum%C3%A1rio)
